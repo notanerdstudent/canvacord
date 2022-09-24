@@ -21,28 +21,25 @@ export async function build(force = false) {
 
     console.log(`${chalk.yellowBright("[Canvacord]")} ${chalk.whiteBright("Downloading assets...")}`);
 
-    const assetsMeta = await fetch(METADATA_URL, {
-        redirect: "follow"
-    })
-        .then(res => res.json())
-        .then(data => {
-            if (!data?.data) throw new Error(`Corrupted assets source`);
-            return data;
-        })
-        .catch((e) => {
-            console.log(`${chalk.redBright("[Canvacord]")} ${chalk.whiteBright(`Failed to download assets:\n\t${chalk.redBright(e)}`)}`);
-        });
-
-    if (!assetsMeta) {
+    const dataJson = await fetch(METADATA_URL, { method: "GET" }).then((res) => res.json()).then(data => { return data; });
+    if (!dataJson) {
         console.log(`${chalk.redBright("[Canvacord]")} ${chalk.whiteBright(`Failed assets installation!`)}`);
     } else {
-        await fs.promises.writeFile(`${ASSETS_DIR}/meta.json`, JSON.stringify(assetsMeta));
+        await fs.promises.writeFile(`${ASSETS_DIR}/meta.json`, JSON.stringify(dataJson));
         console.log(`${chalk.greenBright("[Canvacord]")} ${chalk.whiteBright(`Successfully downloaded metadata!`)}`);
-
+        let parsedData = JSON.parse(JSON.stringify(dataJson));
         console.log(`${chalk.yellowBright("[Canvacord]")} ${chalk.whiteBright("Downloading images...")}`);
-        await Promise.all(assetsMeta.data.images.map(m => downloadAsset(m.url, m.name, true)));
+        for (const image of parsedData.data.images) {
+            setInterval(() => {
+                downloadAsset(image.url, image.name, false);
+            }, 1000);
+        }
         console.log(`${chalk.yellowBright("[Canvacord]")} ${chalk.whiteBright("Downloading fonts...")}`);
-        await Promise.all(assetsMeta.data.fonts.map(m => downloadAsset(m.url, m.name, false)));
+        for (const font of parsedData.data.fonts) {
+            setInterval(() => {
+                downloadAsset(font.url, font.name, false);
+            }, 1000);
+        }
 
         async function downloadAsset(url, name, image) {
             const stream = await fetch(url).then(res => {
