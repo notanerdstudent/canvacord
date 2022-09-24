@@ -30,15 +30,15 @@ export async function build(force = false) {
         let parsedData = JSON.parse(JSON.stringify(dataJson));
         console.log(`${chalk.yellowBright("[Canvacord]")} ${chalk.whiteBright("Downloading images...")}`);
         for (const image of parsedData.data.images) {
-            setInterval(() => {
-                downloadAsset(image.url, image.name, false);
-            }, 1000);
+            await Promise.resolve(
+                downloadAsset(image.url, image.name, true)
+            );
         }
         console.log(`${chalk.yellowBright("[Canvacord]")} ${chalk.whiteBright("Downloading fonts...")}`);
         for (const font of parsedData.data.fonts) {
-            setInterval(() => {
-                downloadAsset(font.url, font.name, false);
-            }, 1000);
+            await Promise.resolve(
+                downloadAsset(font.url, font.name, false)
+            );
         }
 
         async function downloadAsset(url, name, image) {
